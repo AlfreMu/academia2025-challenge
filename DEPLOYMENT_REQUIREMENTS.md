@@ -9,18 +9,18 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 ### 1. 🐳 Containerización con Docker
 
 #### 1.1 Dockerfile para la API
-- [ ] Crear `Dockerfile` optimizado para producción
-- [ ] Usar imagen base `node:18-alpine` para reducir tamaño
-- [ ] Implementar multi-stage build para optimización
-- [ ] Configurar usuario no-root para seguridad
-- [ ] Exponer puerto 3000 de la aplicación
+- [X] Crear `Dockerfile` optimizado para producción
+- [X] Usar imagen base `node:18-alpine` para reducir tamaño
+- [X] Implementar multi-stage build para optimización
+- [X] Configurar usuario no-root para seguridad
+- [X] Exponer puerto 3000 de la aplicación
 
 #### 1.2 Docker Compose para Desarrollo
-- [ ] Crear `docker-compose.yml` para desarrollo local
-- [ ] Incluir servicios: API y PostgreSQL
-- [ ] Configurar volúmenes para persistencia de datos
-- [ ] Configurar redes para comunicación entre servicios
-- [ ] Variables de entorno para cada servicio
+- [X] Crear `docker-compose.yml` para desarrollo local
+- [X] Incluir servicios: API y PostgreSQL
+- [X] Configurar volúmenes para persistencia de datos
+- [X] Configurar redes para comunicación entre servicios
+- [X] Variables de entorno para cada servicio
 
 #### 1.3 Docker Compose para Producción
 - [ ] Crear `docker-compose.prod.yml` para Docker Swarm
