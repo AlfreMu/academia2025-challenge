@@ -8,35 +8,27 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Copy docker-compose via SCP
+      - name: Set up SSH key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_vm
+          echo "$SSH_PRIVATE_KEY" > id_vm
           chmod 600 id_vm
-          scp -P ${{ secrets.SSH_PORT }} -i id_vm -o StrictHostKeyChecking=no \
+
+      - name: Copy docker-compose to VM
+        run: |
+          scp -P $SSH_PORT -i id_vm -o StrictHostKeyChecking=no \
             docker-compose.prod.yml \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
-          rm id_vm
+            $SSH_USER@$SSH_HOST:~/academia2025-challenge/
 
-      - name: Deploy stack via SSH
+      - name: Deploy on VM
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_vm
-          chmod 600 id_vm
-          ssh -p ${{ secrets.SSH_PORT }} -i id_vm -o StrictHostKeyChecking=no \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          set -euxo pipefail
-          STACK_NAME="academiachallenge"
-          WORKDIR="$HOME/academia2025-challenge"
-          cd "$WORKDIR"
-          echo -n 'postgres' | docker secret create db_password - 2>/dev/null || true
-          docker stack deploy -c docker-compose.prod.yml "$STACK_NAME"
-          docker stack services "$STACK_NAME"
-          docker service ps "${STACK_NAME}_api"
-          EOF
-          rm id_vm
+          ssh -p $SSH_PORT -i id_vm -o StrictHostKeyChecking=no \
+            $SSH_USER@$SSH_HOST \
+            "cd ~/academia2025-challenge && docker compose -f docker-compose.prod.yml up -d --build"
 
+      - name: Clean up SSH key
+        run: rm id_vm
