@@ -1,9 +1,9 @@
 services:
   api:
-    image: academia2025-challenge-api:latest
+    image: ghcr.io/alfremu/academia2025-challenge:latest
     ports:
       - target: 3000
-        published: 3000
+        published: 3000       
         protocol: tcp
         mode: ingress
     environment:
@@ -37,6 +37,14 @@ services:
         reservations:
           cpus: "0.10"
           memory: 128M
+      placement:
+        max_replicas_per_node: 3
+
+    healthcheck:
+      test: ["CMD-SHELL","wget -qO- http://localhost:3000/api-docs.json >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   postgres-db:
     image: postgres:15-alpine
