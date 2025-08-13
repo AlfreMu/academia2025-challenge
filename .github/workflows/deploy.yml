@@ -1,47 +1,57 @@
-name: Deploy a VM
+name: Deploy to VM (Swarm via ngrok)
 
 on:
-  workflow_dispatch: {}          
+  workflow_dispatch: {}
   push:
-    tags: ['v*.*.*']             
-    
+    tags: ['v*.*.*']
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # (Opcional) Muestra a qué host/puerto va a conectar
+      - name: Print target
+        run: |
+          echo "SSH_HOST=${{ secrets.SSH_HOST }}"
+          echo "SSH_PORT=${{ secrets.SSH_PORT }}"
+          echo "SSH_USER=${{ secrets.SSH_USER }}"
+
+      # Deploy por SSH (usa tus secrets con ngrok)
       - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1          
         with:
-          host: ${{ secrets.SSH_HOST }}     
-          port: ${{ secrets.SSH_PORT }}     
-          username: ${{ secrets.SSH_USER }} 
-          key: ${{ secrets.SSH_KEY }}       
+          host: ${{ secrets.SSH_HOST }}        
+          port: ${{ secrets.SSH_PORT }}        
+          username: ${{ secrets.SSH_USER }}    
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  
+          debug: true
+          timeout: "60s"
+          command_timeout: "2m"
           script: |
             set -euxo pipefail
 
-            # 0) Contexto
             STACK_NAME="academiachallenge"
             WORKDIR="$HOME/academia2025-challenge"
             COMPOSE_FILE="docker-compose.prod.yml"
 
-            # 1) Preparar carpeta de trabajo
             mkdir -p "$WORKDIR"
             cd "$WORKDIR"
 
-            # 2) Descargar el compose desde main (si preferís, puedes dejar una copia fija en la VM)
+            # Traer el compose desde main
             curl -fsSL -o "$COMPOSE_FILE" \
               "https://raw.githubusercontent.com/${{ github.repository }}/main/$COMPOSE_FILE"
 
-            # 3) Secret de DB (idempotente; si ya existe, ignora el error)
+            # Secret de DB (idempotente)
             echo -n 'postgres' | docker secret create db_password - 2>/dev/null || true
 
-            # 4) Despliegue / Rolling update del stack
+            # Deploy / rolling update
             docker stack deploy -c "$COMPOSE_FILE" "$STACK_NAME"
 
-            # 5) Estado resumido
+            # Estado
             docker stack services "$STACK_NAME"
             docker service ps "${STACK_NAME}_api"
