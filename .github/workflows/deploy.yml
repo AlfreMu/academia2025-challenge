@@ -1,4 +1,4 @@
-name: Deploy to VM (Swarm via ngrok)
+name: Deploy to VM (via ngrok + SCP)
 
 on:
   workflow_dispatch: {}
@@ -14,44 +14,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # (Opcional) Muestra a qué host/puerto va a conectar
-      - name: Print target
+      - name: Copy docker-compose via SCP
         run: |
-          echo "SSH_HOST=${{ secrets.SSH_HOST }}"
-          echo "SSH_PORT=${{ secrets.SSH_PORT }}"
-          echo "SSH_USER=${{ secrets.SSH_USER }}"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_vm
+          chmod 600 id_vm
+          scp -P ${{ secrets.SSH_PORT }} -i id_vm -o StrictHostKeyChecking=no \
+            docker-compose.prod.yml \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
+          rm id_vm
 
-      # Deploy por SSH (usa tus secrets con ngrok)
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1          
-        with:
-          host: ${{ secrets.SSH_HOST }}        
-          port: ${{ secrets.SSH_PORT }}        
-          username: ${{ secrets.SSH_USER }}    
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  
-          debug: true
-          timeout: "60s"
-          command_timeout: "2m"
-          script: |
-            set -euxo pipefail
+      - name: Deploy stack via SSH
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_vm
+          chmod 600 id_vm
+          ssh -p ${{ secrets.SSH_PORT }} -i id_vm -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          set -euxo pipefail
+          STACK_NAME="academiachallenge"
+          WORKDIR="$HOME/academia2025-challenge"
+          cd "$WORKDIR"
+          echo -n 'postgres' | docker secret create db_password - 2>/dev/null || true
+          docker stack deploy -c docker-compose.prod.yml "$STACK_NAME"
+          docker stack services "$STACK_NAME"
+          docker service ps "${STACK_NAME}_api"
+          EOF
+          rm id_vm
 
-            STACK_NAME="academiachallenge"
-            WORKDIR="$HOME/academia2025-challenge"
-            COMPOSE_FILE="docker-compose.prod.yml"
-
-            mkdir -p "$WORKDIR"
-            cd "$WORKDIR"
-
-            # Traer el compose desde main
-            curl -fsSL -o "$COMPOSE_FILE" \
-              "https://raw.githubusercontent.com/${{ github.repository }}/main/$COMPOSE_FILE"
-
-            # Secret de DB (idempotente)
-            echo -n 'postgres' | docker secret create db_password - 2>/dev/null || true
-
-            # Deploy / rolling update
-            docker stack deploy -c "$COMPOSE_FILE" "$STACK_NAME"
-
-            # Estado
-            docker stack services "$STACK_NAME"
-            docker service ps "${STACK_NAME}_api"
