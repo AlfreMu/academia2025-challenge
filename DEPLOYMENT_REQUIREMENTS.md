@@ -23,12 +23,12 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 - [X] Variables de entorno para cada servicio
 
 #### 1.3 Docker Compose para Producción
-- [ ] Crear `docker-compose.prod.yml` para Docker Swarm
-- [ ] Configurar replicas y estrategias de deployment
-- [ ] Implementar secrets para credenciales
-- [ ] Configurar limits de recursos (CPU, memoria)
-- [ ] Configurar restart policies
-- [ ] Configurar redes overlay para Swarm
+- [X] Crear `docker-compose.prod.yml` para Docker Swarm
+- [X] Configurar replicas y estrategias de deployment
+- [X] Implementar secrets para credenciales
+- [X] Configurar limits de recursos (CPU, memoria)
+- [X] Configurar restart policies
+- [X] Configurar redes overlay para Swarm
 
 ---
 
@@ -42,10 +42,10 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 - [ ] Ejecutar tests unitarios y de integración
 
 #### 2.2 Workflow de Build y Push
-- [ ] Crear `.github/workflows/build.yml`
-- [ ] Build de imagen Docker en cada release/tag
-- [ ] Push a Docker Hub o GitHub Container Registry
-- [ ] Cacheo de layers de Docker para optimización
+- [X] Crear `.github/workflows/build.yml`
+- [X] Build de imagen Docker en cada release/tag
+- [X] Push a Docker Hub o GitHub Container Registry
+- [X] Cacheo de layers de Docker para optimización
 
 #### 2.3 Workflow de Deployment
 - [ ] Crear `.github/workflows/deploy.yml`
