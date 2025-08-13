@@ -1,6 +1,6 @@
 services:
   api:
-    image: academia2025-challenge-api:prod
+    image: academia2025-challenge-api:latest
     ports:
       - target: 3000
         published: 3000
