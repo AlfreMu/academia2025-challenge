@@ -1,0 +1,47 @@
+name: Deploy a VM
+
+on:
+  workflow_dispatch: {}          
+  push:
+    tags: ['v*.*.*']             
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}     
+          port: ${{ secrets.SSH_PORT }}     
+          username: ${{ secrets.SSH_USER }} 
+          key: ${{ secrets.SSH_KEY }}       
+          script: |
+            set -euxo pipefail
+
+            # 0) Contexto
+            STACK_NAME="academiachallenge"
+            WORKDIR="$HOME/academia2025-challenge"
+            COMPOSE_FILE="docker-compose.prod.yml"
+
+            # 1) Preparar carpeta de trabajo
+            mkdir -p "$WORKDIR"
+            cd "$WORKDIR"
+
+            # 2) Descargar el compose desde main (si preferís, puedes dejar una copia fija en la VM)
+            curl -fsSL -o "$COMPOSE_FILE" \
+              "https://raw.githubusercontent.com/${{ github.repository }}/main/$COMPOSE_FILE"
+
+            # 3) Secret de DB (idempotente; si ya existe, ignora el error)
+            echo -n 'postgres' | docker secret create db_password - 2>/dev/null || true
+
+            # 4) Despliegue / Rolling update del stack
+            docker stack deploy -c "$COMPOSE_FILE" "$STACK_NAME"
+
+            # 5) Estado resumido
+            docker stack services "$STACK_NAME"
+            docker service ps "${STACK_NAME}_api"
