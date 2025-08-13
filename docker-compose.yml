@@ -3,7 +3,7 @@ version: "3.9"
 services:
   api:
     build: .
-    image: academia2025-challenge-api:dev
+    image: ghcr.io/alfremu/academia2025-challenge:latest
     env_file: .env
     depends_on:
       postgres-db:

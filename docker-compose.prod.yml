@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  api:
+    image: academia2025-challenge-api:prod
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: ingress
+    environment:
+      DB_HOST: postgres-db
+      DB_PORT: "5432"
+      DB_NAME: challenge_api
+      DB_USER: postgres
+    command:
+      - /bin/sh
+      - -lc
+      - 'export DB_PASSWORD=$$(cat /run/secrets/db_password) && exec node dist/app.js'
+    secrets:
+      - db_password
+    networks:
+      - app-net
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 5s
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 10
+        window: 30s
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+
+  postgres-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: challenge_api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    secrets:
+      - db_password
+    networks:
+      - app-net
+    deploy:
+      replicas: 1
+      placement:
+        max_replicas_per_node: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 10
+        window: 30s
+      resources:
+        limits:
+          cpus: "0.40"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+
+networks:
+  app-net:
+    driver: overlay
+    attachable: true
+
+volumes:
+  pgdata:
+
+secrets:
+  db_password:
+    external: true
