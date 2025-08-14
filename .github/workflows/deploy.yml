@@ -1,17 +1,11 @@
-name: Deploy Academia Challenge
+name: deploy.yml
 
 on:
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  DEPLOY_TAG: latest
-
 jobs:
   deploy:
     runs-on: ubuntu-22.04
-    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -32,7 +26,8 @@ jobs:
           chmod 600 /tmp/private_key
 
           scp -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
-            docker-compose.prod.yml nginx.conf \
+            docker-compose.prod.yml \
+            -r Nginx \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
 
           rm /tmp/private_key
@@ -47,25 +42,20 @@ jobs:
           script: |
             cd ~/academia2025-challenge
 
-            echo "Haciendo login a GHCR"
-            echo ${{ secrets.REGISTRY_TOKEN }} | docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
-
-            echo "Inicializando Swarm (si hace falta)"
+            echo "Iniciando Swarm si no está activo"
             docker swarm init --advertise-addr $(hostname -I | awk '{print $1}') || true
 
-            echo "Seteando GITHUB_REPOSITORY en minúsculas"
-            REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-
-            echo "Haciendo pull de la imagen"
-            docker pull ghcr.io/$REPO:${{ env.DEPLOY_TAG }}
-
-            echo "Eliminando stack existente (si existe)"
+            echo "Eliminando stack anterior si existe"
             docker stack rm academiachallenge || true
-            echo "Esperando a que se elimine completamente..."
             sleep 6
 
-            echo "Recreando red overlay app-net"
-            docker network rm app-net || true
+            echo "Creando red overlay si no existe"
+            docker network rm app_network || true
+            docker network create --driver overlay --attachable app_network
+
+            echo "Haciendo deploy del stack"
+            docker stack deploy -c docker-compose.prod.yml academiachallenge
+
             docker network create --driver overlay --attachable app-net
 
             echo "Haciendo deploy del stack"
