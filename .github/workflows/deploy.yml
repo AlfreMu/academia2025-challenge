@@ -27,10 +27,13 @@ jobs:
 
           scp -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
             docker-compose.prod.yml \
-            -r Nginx \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
 
-          rm /tmp/private_key
+          scp -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -r \
+            Nginx \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
+
+          rm /tmp/private_key          
 
       - name: Deploy with Docker Swarm
         uses: appleboy/ssh-action@v1
