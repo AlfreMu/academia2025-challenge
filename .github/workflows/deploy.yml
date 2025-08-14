@@ -45,7 +45,7 @@ jobs:
           script: |
             cd ~/academia2025-challenge
 
-            echo "Inicializando Swarm"
+            echo "Inicializando Swarm (si no está inicializado)"
             docker swarm init --advertise-addr $(hostname -I | awk '{print $1}') || true
 
             echo "Eliminando stack existente"
@@ -55,17 +55,11 @@ jobs:
 
             echo "Eliminando red si existe"
             docker network rm academiachallenge_app-net || true
-            echo "Esperando..."
-            sleep 3
 
             echo "Esperando a que la red se libere..."
             while docker network inspect academiachallenge_app-net >/dev/null 2>&1; do
-            echo "La red todavía existe, esperando..."
-            sleep 2
+              sleep 2
             done
-
-            echo "Creando red overlay app-net"
-            docker network create --driver overlay --attachable academiachallenge_app-net
 
             echo "Desplegando nuevo stack"
             docker stack deploy -c docker-compose.prod.yml academiachallenge
