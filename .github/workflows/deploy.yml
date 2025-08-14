@@ -1,34 +1,72 @@
-name: Deploy to VM (via ngrok + SCP)
+name: Deploy Academia Challenge
 
 on:
-  workflow_dispatch: {}
-  push:
-    tags: ['v*.*.*']
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DEPLOY_TAG: latest
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up SSH key
+      - name: Create remote directory
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: mkdir -p ~/academia2025-challenge
+
+      - name: Copy files to VM
         run: |
-          echo "$SSH_PRIVATE_KEY" > id_vm
-          chmod 600 id_vm
+          echo "${{ secrets.SSH_KEY }}" > /tmp/private_key
+          chmod 600 /tmp/private_key
 
-      - name: Copy docker-compose to VM
-        run: |
-          scp -P $SSH_PORT -i id_vm -o StrictHostKeyChecking=no \
-            docker-compose.prod.yml \
-            $SSH_USER@$SSH_HOST:~/academia2025-challenge/
+          scp -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
+            docker-compose.prod.yml nginx.conf \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
 
-      - name: Deploy on VM
-        run: |
-          ssh -p $SSH_PORT -i id_vm -o StrictHostKeyChecking=no \
-            $SSH_USER@$SSH_HOST \
-            "cd ~/academia2025-challenge && docker compose -f docker-compose.prod.yml up -d --build"
+          rm /tmp/private_key
 
-      - name: Clean up SSH key
-        run: rm id_vm
+      - name: Deploy with Docker Swarm
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/academia2025-challenge
+
+            echo "Haciendo login a GHCR"
+            echo ${{ secrets.REGISTRY_TOKEN }} | docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+            echo "Inicializando Swarm (si hace falta)"
+            docker swarm init --advertise-addr $(hostname -I | awk '{print $1}') || true
+
+            echo "Seteando GITHUB_REPOSITORY en minúsculas"
+            REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+
+            echo "Haciendo pull de la imagen"
+            docker pull ghcr.io/$REPO:${{ env.DEPLOY_TAG }}
+
+            echo "Eliminando stack existente (si existe)"
+            docker stack rm academiachallenge || true
+            echo "Esperando a que se elimine completamente..."
+            sleep 6
+
+            echo "Recreando red overlay app-net"
+            docker network rm app-net || true
+            docker network create --driver overlay --attachable app-net
+
+            echo "Haciendo deploy del stack"
+            docker stack deploy -c docker-compose.prod.yml academiachallenge
