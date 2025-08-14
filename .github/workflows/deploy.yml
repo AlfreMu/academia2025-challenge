@@ -20,14 +20,19 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: mkdir -p ~/academia2025-challenge
 
-      - name: Copy files to VM
+      - name: Copy docker-compose.prod.yml to VM
         run: |
           echo "${{ secrets.SSH_KEY }}" > /tmp/private_key
           chmod 600 /tmp/private_key
 
           scp -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
             docker-compose.prod.yml \
-            -r Nginx \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
+
+      - name: Copy Nginx folder to VM
+        run: |
+          scp -r -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
+            Nginx \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
 
           rm /tmp/private_key
@@ -42,21 +47,16 @@ jobs:
           script: |
             cd ~/academia2025-challenge
 
-            echo "Iniciando Swarm si no está activo"
+            echo "Haciendo login a GHCR..."
+            echo ${{ secrets.REGISTRY_TOKEN }} | docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+            echo "Inicializando Swarm (si hace falta)"
             docker swarm init --advertise-addr $(hostname -I | awk '{print $1}') || true
 
-            echo "Eliminando stack anterior si existe"
+            echo "Eliminando stack existente (si existe)"
             docker stack rm academiachallenge || true
             sleep 6
 
-            echo "Creando red overlay si no existe"
-            docker network rm app_network || true
-            docker network create --driver overlay --attachable app_network
-
-            echo "Haciendo deploy del stack"
+            echo "Desplegando nuevo stack"
             docker stack deploy -c docker-compose.prod.yml academiachallenge
 
-            docker network create --driver overlay --attachable app-net
-
-            echo "Haciendo deploy del stack"
-            docker stack deploy -c docker-compose.prod.yml academiachallenge
