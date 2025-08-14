@@ -1,4 +1,4 @@
-name: deploy.yml
+name: Deploy to Docker Swarm
 
 on:
   workflow_dispatch:
@@ -20,19 +20,14 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: mkdir -p ~/academia2025-challenge
 
-      - name: Copy docker-compose.prod.yml to VM
+      - name: Copy files to VM
         run: |
           echo "${{ secrets.SSH_KEY }}" > /tmp/private_key
           chmod 600 /tmp/private_key
 
           scp -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
             docker-compose.prod.yml \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
-
-      - name: Copy Nginx folder to VM
-        run: |
-          scp -r -i /tmp/private_key -P ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
-            Nginx \
+            -r Nginx \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/academia2025-challenge/
 
           rm /tmp/private_key
@@ -48,7 +43,7 @@ jobs:
             cd ~/academia2025-challenge
 
             echo "Haciendo login a GHCR..."
-            echo ${{ secrets.REGISTRY_TOKEN }} | docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+            echo "${{ secrets.REGISTRY_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
 
             echo "Inicializando Swarm (si hace falta)"
             docker swarm init --advertise-addr $(hostname -I | awk '{print $1}') || true
@@ -57,6 +52,9 @@ jobs:
             docker stack rm academiachallenge || true
             sleep 6
 
+            echo "Recreando red overlay"
+            docker network rm academiachallenge_app-net || true
+            docker network create --driver overlay --attachable academiachallenge_app-net
+
             echo "Desplegando nuevo stack"
             docker stack deploy -c docker-compose.prod.yml academiachallenge
-
