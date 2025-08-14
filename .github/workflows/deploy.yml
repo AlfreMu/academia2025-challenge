@@ -58,6 +58,12 @@ jobs:
             echo "Esperando..."
             sleep 3
 
+            echo "Esperando a que la red se libere..."
+            while docker network inspect academiachallenge_app-net >/dev/null 2>&1; do
+            echo "La red todavía existe, esperando..."
+            sleep 2
+            done
+
             echo "Creando red overlay app-net"
             docker network create --driver overlay --attachable academiachallenge_app-net
 
