@@ -45,18 +45,20 @@ jobs:
           script: |
             cd ~/academia2025-challenge
 
-            echo "Haciendo login a GHCR..."
-            echo "${{ secrets.REGISTRY_TOKEN }}" | docker login ghcr.io -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
-
-            echo "Inicializando Swarm (si hace falta)"
+            echo "Inicializando Swarm"
             docker swarm init --advertise-addr $(hostname -I | awk '{print $1}') || true
 
-            echo "Eliminando stack existente (si existe)"
+            echo "Eliminando stack existente"
             docker stack rm academiachallenge || true
+            echo "Esperando a que se liberen recursos..."
             sleep 6
 
-            echo "Recreando red overlay"
+            echo "Eliminando red si existe"
             docker network rm academiachallenge_app-net || true
+            echo "Esperando..."
+            sleep 3
+
+            echo "Creando red overlay app-net"
             docker network create --driver overlay --attachable academiachallenge_app-net
 
             echo "Desplegando nuevo stack"
