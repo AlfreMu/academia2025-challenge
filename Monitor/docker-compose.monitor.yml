@@ -74,4 +74,4 @@ volumes:
 
 networks:
   monitoring_net:
-    driver: bridge
+    driver: overlay
