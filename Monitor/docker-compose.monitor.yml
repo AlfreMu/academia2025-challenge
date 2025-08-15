@@ -39,10 +39,20 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
     ports:
       - "3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=app.debugmail.io:25
+      - GF_SMTP_USER=1edd0f82-28a0-4431-8e2a-14b7a7d6242f
+      - GF_SMTP_PASSWORD=5bb0428b-abc9-49f8-a4ad-80c2bad93e7a
+      - GF_SMTP_SKIP_VERIFY=true
+      - GF_SMTP_FROM_ADDRESS=alertas@monitor.local
+      - GF_SMTP_FROM_NAME=Grafana Monitor
     networks:
       - monitoring_net
 
