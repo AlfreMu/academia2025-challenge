@@ -59,6 +59,8 @@ services:
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
       - loki_data:/loki
+      - loki_wal:/wal
+
 
     networks:
       - monitoring_net
@@ -77,6 +79,7 @@ services:
 volumes:
   grafana_data:
   loki_data:
+  loki_wal:
 
 networks:
   monitoring_net:
