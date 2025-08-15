@@ -3,8 +3,10 @@ version: "3.8"
 services:
   node-exporter:
     image: prom/node-exporter:latest
+    container_name: node-exporter
     ports:
       - "9100:9100"
+    pid: "host"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -16,17 +18,9 @@ services:
     networks:
       - monitoring_net
 
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - monitoring_net
-
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
     ports:
       - "8081:8080"
     volumes:
@@ -37,10 +31,29 @@ services:
     networks:
       - monitoring_net
 
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:postgres@postgres-db:5432/postgres?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - monitoring_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring_net
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    restart: unless-stopped
     ports:
       - "3001:3000"
     volumes:
@@ -56,33 +69,9 @@ services:
     networks:
       - monitoring_net
 
-  loki:
-    image: grafana/loki:2.9.0
-    command: -config.file=/etc/loki/loki-config.yaml
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki-config.yaml:/etc/loki/loki-config.yaml
-      - loki_data:/loki
-      
-    networks:
-      - monitoring_net
-
-  promtail:
-    image: grafana/promtail:2.9.0
-    volumes:
-      - /var/log:/var/log
-      - /etc/machine-id:/etc/machine-id
-      - /etc/hostname:/etc/hostname
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
-    command: -config.file=/etc/promtail/config.yaml
-    networks:
-      - monitoring_net
-
 volumes:
   grafana_data:
-  loki_data:
 
 networks:
   monitoring_net:
-    driver: overlay
+    driver: bridge
