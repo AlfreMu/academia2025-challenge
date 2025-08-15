@@ -35,11 +35,11 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 ### 2. 🔄 GitHub Actions CI/CD
 
 #### 2.1 Workflow de Testing
-- [ ] Crear `.github/workflows/test.yml`
-- [ ] Ejecutar tests en cada push de commit
-- [ ] Configurar matrix para múltiples versiones de Node.js
-- [ ] Ejecutar linting con ESLint
-- [ ] Ejecutar tests unitarios y de integración
+- [-] Crear `.github/workflows/test.yml`
+- [-] Ejecutar tests en cada push de commit
+- [-] Configurar matrix para múltiples versiones de Node.js
+- [-] Ejecutar linting con ESLint
+- [-] Ejecutar tests unitarios y de integración
 
 #### 2.2 Workflow de Build y Push
 - [X] Crear `.github/workflows/build.yml`
@@ -48,37 +48,37 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 - [X] Cacheo de layers de Docker para optimización
 
 #### 2.3 Workflow de Deployment
-- [ ] Crear `.github/workflows/deploy.yml`
-- [ ] Configurar SSH connection a VM Ubuntu 24.04
-- [ ] Pull de la nueva imagen en la VM
-- [ ] Deployment con Docker Swarm
-- [ ] Rolling updates sin downtime
-- [ ] Rollback automático en caso de falla
-- [ ] Notificaciones de deployment (Discord/Slack)
+- [X] Crear `.github/workflows/deploy.yml`
+- [X] Configurar SSH connection a VM Ubuntu 24.04
+- [X] Pull de la nueva imagen en la VM
+- [X] Deployment con Docker Swarm
+- [X] Rolling updates sin downtime
+- [X] Rollback automático en caso de falla
+- [X] Notificaciones de deployment (Discord/Slack)
 
 #### 2.4 Secrets y Variables
-- [ ] Configurar secrets en GitHub:
-  - SSH private key para VM
-  - Docker registry credentials
-  - Database credentials
-  - API keys para monitoreo
-- [ ] Variables de entorno por ambiente
+- [X] Configurar secrets en GitHub:
+- [X] SSH private key para VM
+- [X] Docker registry credentials
+- [X] Database credentials
+- [] API keys para monitoreo
+- [X] Variables de entorno por ambiente
 
 ---
 
 ### 3. 🖥️ Configuración de VM Ubuntu 24.04
 
 #### 3.1 Setup Inicial de la VM
-- [ ] Instalar Docker Engine latest
-- [ ] Configurar Docker Swarm mode
-- [ ] Configurar firewall (UFW) con puertos necesarios
-- [ ] Crear usuario específico para deployments
-- [ ] Configurar SSH keys para GitHub Actions
-- [ ] Instalar docker-compose
+- [X] Instalar Docker Engine latest
+- [X] Configurar Docker Swarm mode
+- [X] Configurar firewall (UFW) con puertos necesarios
+- [X] Crear usuario específico para deployments
+- [X] Configurar SSH keys para GitHub Actions
+- [X] Instalar docker-compose
 
 #### 3.2 Configuración de Servicios Base
-- [ ] Setup de PostgreSQL como servicio de Docker
-- [ ] Setup de Nginx como reverse proxy
+- [X] Setup de PostgreSQL como servicio de Docker
+- [X] Setup de Nginx como reverse proxy
 - [ ] Configuración de SSL/TLS con Let's Encrypt
 
 ---
