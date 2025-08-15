@@ -34,7 +34,7 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 
 ### 2. 🔄 GitHub Actions CI/CD
 
-#### 2.1 Workflow de Testing
+#### 2.1 Workflow de Testing ##
 - [-] Crear `.github/workflows/test.yml`
 - [-] Ejecutar tests en cada push de commit
 - [-] Configurar matrix para múltiples versiones de Node.js
@@ -86,19 +86,19 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 ### 4. 📊 Stack de Monitoreo con Grafana
 
 #### 4.1 Prometheus Setup
-- [ ] Configurar Prometheus como servicio Docker
+- [X] Configurar Prometheus como servicio Docker
 - [ ] Configurar scraping de métricas de la API
-- [ ] Configurar métricas de sistema (node_exporter)
-- [ ] Configurar métricas de Docker (cAdvisor)
-- [ ] Configurar métricas de PostgreSQL
-- [ ] Configurar retention policies
+- [X] Configurar métricas de sistema (node_exporter)
+- [X] Configurar métricas de Docker (cAdvisor)
+- [X] Configurar métricas de PostgreSQL
+- [X] Configurar retention policies
 
 #### 4.2 Grafana Configuration
-- [ ] Setup de Grafana como servicio Docker
+- [X] Setup de Grafana como servicio Docker
 - [ ] Configurar data sources (Prometheus, Loki)
 - [ ] Configurar authentication y usuarios
-- [ ] Configurar SMTP para alertas por email
-- [ ] Configurar themes y branding
+- [X] Configurar SMTP para alertas por email
+- [X] Configurar themes y branding
 
 #### 4.3 Dashboards Requeridos
 
@@ -111,12 +111,12 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 - [ ] Active users concurrentes
 
 ##### Dashboard 2: Sistema y Infraestructura
-- [ ] CPU usage de la VM
-- [ ] Memory usage y swap
-- [ ] Disk I/O y espacio disponible
-- [ ] Network traffic
-- [ ] Docker containers status
-- [ ] PostgreSQL connections y performance
+- [X] CPU usage de la VM
+- [X] Memory usage y swap
+- [X] Disk I/O y espacio disponible
+- [X] Network traffic
+- [X] Docker containers status
+- [X] PostgreSQL connections y performance
 
 ##### Dashboard 3: Business Metrics
 - [ ] Registros de usuarios por día
@@ -135,9 +135,9 @@ Configurar un pipeline completo de CI/CD con GitHub Actions para hacer deploymen
 #### 4.4 Alerting Rules
 - [ ] API response time > 2 segundos
 - [ ] Error rate > 5% en 5 minutos
-- [ ] CPU usage > 80% por 10 minutos
-- [ ] Memory usage > 90% por 5 minutos
-- [ ] Disk space < 10% disponible
+- [X] CPU usage > 80% por 10 minutos
+- [X] Memory usage > 90% por 5 minutos
+- [X] Disk space < 10% disponible
 - [ ] PostgreSQL connections > 80% del límite
 - [ ] Failed logins > 10 en 5 minutos
 
