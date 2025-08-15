@@ -3,10 +3,8 @@ version: "3.8"
 services:
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: node-exporter
     ports:
       - "9100:9100"
-    pid: "host"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -18,9 +16,17 @@ services:
     networks:
       - monitoring_net
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring_net
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
     ports:
       - "8081:8080"
     volumes:
@@ -31,41 +37,33 @@ services:
     networks:
       - monitoring_net
 
-  postgres-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter
-    container_name: postgres-exporter
-    environment:
-      - DATA_SOURCE_NAME=postgresql://postgres:postgres@postgres-db:5432/postgres?sslmode=disable
-    ports:
-      - "9187:9187"
-    networks:
-      - monitoring_net
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - monitoring_net
-
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
     ports:
       - "3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-    environment:
-      - GF_SMTP_ENABLED=true
-      - GF_SMTP_HOST=app.debugmail.io:25
-      - GF_SMTP_USER=1edd0f82-28a0-4431-8e2a-14b7a7d6242f
-      - GF_SMTP_PASSWORD=5bb0428b-abc9-49f8-a4ad-80c2bad93e7a
-      - GF_SMTP_SKIP_VERIFY=true
-      - GF_SMTP_FROM_ADDRESS=alertas@monitor.local
-      - GF_SMTP_FROM_NAME=Grafana Monitor
+    networks:
+      - monitoring_net
+
+  loki:
+    image: grafana/loki:2.9.0
+    command: -config.file=/etc/loki/loki-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+    networks:
+      - monitoring_net
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    volumes:
+      - /var/log:/var/log
+      - /etc/machine-id:/etc/machine-id
+      - /etc/hostname:/etc/hostname
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
     networks:
       - monitoring_net
 
@@ -74,4 +72,4 @@ volumes:
 
 networks:
   monitoring_net:
-    external: true
+    driver: overlay
