@@ -62,4 +62,8 @@ jobs:
             done
 
             echo "Desplegando nuevo stack"
+            POSTGRES_HOST=${{ secrets.POSTGRES_HOST }} \
+            POSTGRES_PORT=${{ secrets.POSTGRES_PORT }} \
+            POSTGRES_NAME=${{ secrets.POSTGRES_NAME }} \
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
             docker stack deploy -c docker-compose.prod.yml academiachallenge
