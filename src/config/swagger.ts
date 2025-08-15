@@ -19,10 +19,14 @@ const options = {
         url: 'https://opensource.org/licenses/MIT'
       }
     },
-    servers: [
+     servers: [
       {
         url: 'http://localhost:3000',
         description: 'Servidor de desarrollo'
+      },
+      {
+        url: 'http://192.168.1.41',
+        description: 'Servidor en la red local de la VM'
       }
     ],
     components: {
